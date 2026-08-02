@@ -42,7 +42,7 @@ Construida con **NestJS**, **TypeORM** y **MySQL** — incluye autenticación JW
 
 Reemplaza la gestión manual de socios, cuotas y actividades por una API pensada para alimentar tanto una **web de administración** interna como una **app móvil** de cara al público. Categoriza socios automáticamente, emite cupones de cobranza todos los meses, controla la morosidad y liquida a los cobradores sin intervención manual.
 
-Desarrollado como Trabajo Práctico Final de **Práctica Profesionalizante II** — Instituto Superior de Computación Administrativa (ISCA4014), Rosario.
+Desarrollado como Trabajo Práctico Final de **Práctica Profesionalizante II** — Instituto Superior de Computación Administrativa (ISCA4014)
 
 ## ✨ Características principales
 
@@ -423,7 +423,7 @@ Tu token es válido, pero tu rol no tiene permiso para esa acción. Revisá la <
 
 ## 🎓 Créditos
 
-Proyecto académico desarrollado en el marco de **Práctica Profesionalizante II** — Instituto Superior de Computación Administrativa (**ISCA4014**), Rosario, Santa Fe, Argentina.
+Proyecto académico desarrollado en el marco de **Práctica Profesionalizante II** — Instituto Superior de Computación Administrativa (**ISCA4014**), Argentina.
 
 Club Social y Deportivo *"El Globo"* — Pasco 2856, Rosario, Santa Fe.
 
