@@ -141,13 +141,9 @@ Esto crea la base `el_globo` con sus 12 tablas, relaciones (FK) y los datos inic
 
 ## ⚙️ Configuración
 
-Este proyecto usa variables de entorno para no exponer credenciales sensibles. Copiá el archivo de ejemplo:
+Este proyecto usa variables de entorno para no exponer credenciales sensibles. 
 
-```bash
-cp .env.example .env
-```
-
-Abrí el `.env` recién creado y ajustá los valores según tu entorno local:
+Abrí el `.env` del repositorio y ajustá los valores según tu entorno local:
 
 ```env
 # --- Base de datos MySQL ---
