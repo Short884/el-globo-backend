@@ -119,7 +119,7 @@ Antes de instalar, asegurate de tener lo siguiente en tu computadora:
 **1. Cloná el repositorio**
 
 ```bash
-git clone https://github.com/tu-usuario/el-globo-backend.git
+git clone https://github.com/short884/el-globo-backend.git
 cd el-globo-backend
 ```
 
