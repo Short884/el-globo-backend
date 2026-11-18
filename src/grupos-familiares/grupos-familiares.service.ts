@@ -27,7 +27,10 @@ export class GruposFamiliaresService {
       throw new BadRequestException('Un socio no puede figurar dos veces en el mismo grupo familiar.');
     }
 
-    const socios = await this.sociosRepo.find({ where: ids.map((id) => ({ id })) });
+    const socios = await this.sociosRepo.find({
+      where: ids.map((id) => ({ id })),
+      relations: ['grupoFamiliar'],
+    });
     if (socios.length !== ids.length) {
       throw new NotFoundException('Alguno de los socios indicados no existe en el padrón.');
     }

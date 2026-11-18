@@ -49,7 +49,7 @@ export class SociosService {
     if (query.estado) qb.andWhere('socio.estado = :estado', { estado: query.estado });
     if (query.buscar) {
       qb.andWhere(
-        '(socio.nombre ILIKE :buscar OR socio.apellido ILIKE :buscar OR socio.dni ILIKE :buscar)',
+        '(LOWER(socio.nombre) LIKE LOWER(:buscar) OR LOWER(socio.apellido) LIKE LOWER(:buscar) OR socio.dni LIKE :buscar)',
         { buscar: `%${query.buscar}%` },
       );
     }

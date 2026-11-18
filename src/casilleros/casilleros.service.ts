@@ -37,7 +37,9 @@ export class CasillerosService {
     const qb = this.repo.createQueryBuilder('casillero').leftJoinAndSelect('casillero.socio', 'socio');
 
     if (query.orden === OrdenCasillero.ALFABETICO) {
-      qb.orderBy('socio.apellido', 'ASC', 'NULLS LAST').addOrderBy('socio.nombre', 'ASC');
+      qb.orderBy('CASE WHEN socio.id IS NULL THEN 1 ELSE 0 END', 'ASC')
+        .addOrderBy('socio.apellido', 'ASC')
+        .addOrderBy('socio.nombre', 'ASC');
     } else {
       qb.orderBy('casillero.numero', 'ASC');
     }

@@ -29,7 +29,7 @@ export function calcularCategoriaSocial(
   }
 
   const antiguedad = DateUtils.aniosTranscurridos(fechaAlta);
-  if (edad > parametros.edadMinimaVitalicio && antiguedad >= parametros.antiguedadMinimaVitalicio) {
+  if (edad >= parametros.edadMinimaVitalicio && antiguedad >= parametros.antiguedadMinimaVitalicio) {
     return CategoriaSocial.VITALICIO;
   }
 

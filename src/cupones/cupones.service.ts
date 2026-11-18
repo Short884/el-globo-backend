@@ -214,8 +214,9 @@ export class CuponesService {
 
   /**
    * Control de morosidad (R10): si un socio acumula 2 meses consecutivos
-   * sin pagar, se lo marca MOROSO, se lo SUSPENDE en el uso de los
-   * servicios del club y se deja de emitirle cupón de cobranza.
+   * sin pagar, se lo marca MOROSO y SUSPENDIDO en el uso de los
+   * servicios del club, y se deja de emitirle cupón de cobranza.
+   * Agrupa cupones por socio para evitar incrementos dobles si hay reemisiones.
    */
   private async aplicarControlDeMorosidad(periodoNuevo: string): Promise<void> {
     const config = await this.configuracionService.getOrCreate();
@@ -226,24 +227,38 @@ export class CuponesService {
       relations: ['socio'],
     });
 
-    for (const cupon of cuponesAnteriores) {
-      const socio = await this.sociosRepo.findOne({ where: { id: cupon.socio.id } });
+    const cuponesPorSocio = new Map<number, Cupon[]>();
+    for (const c of cuponesAnteriores) {
+      if (!c.socio?.id) continue;
+      const lista = cuponesPorSocio.get(c.socio.id) ?? [];
+      lista.push(c);
+      cuponesPorSocio.set(c.socio.id, lista);
+    }
+
+    for (const [socioId, cupones] of cuponesPorSocio.entries()) {
+      const socio = await this.sociosRepo.findOne({ where: { id: socioId } });
       if (!socio || socio.estado === EstadoSocio.BAJA) continue;
 
-      const impago = cupon.estado === EstadoCupon.PENDIENTE || cupon.estado === EstadoCupon.DEVUELTO;
+      const tieneImpago = cupones.some(
+        (c) => c.estado === EstadoCupon.PENDIENTE || c.estado === EstadoCupon.DEVUELTO,
+      );
 
-      if (impago) {
+      if (tieneImpago) {
         socio.mesesImpagosConsecutivos += 1;
+        if (socio.mesesImpagosConsecutivos >= config.mesesConsecutivosParaMorosidad) {
+          socio.estado = EstadoSocio.SUSPENDIDO;
+          this.logger.warn(
+            `Socio #${socio.id} (${socio.apellido}, ${socio.nombre}) declarado moroso y suspendido ` +
+              `por ${socio.mesesImpagosConsecutivos} meses consecutivos impagos.`,
+          );
+        } else {
+          socio.estado = EstadoSocio.MOROSO;
+        }
       } else {
         socio.mesesImpagosConsecutivos = 0;
-      }
-
-      if (socio.mesesImpagosConsecutivos >= config.mesesConsecutivosParaMorosidad) {
-        socio.estado = EstadoSocio.SUSPENDIDO;
-        this.logger.warn(
-          `Socio #${socio.id} (${socio.apellido}, ${socio.nombre}) declarado moroso y suspendido ` +
-            `por ${socio.mesesImpagosConsecutivos} meses consecutivos impagos.`,
-        );
+        if (socio.estado === EstadoSocio.MOROSO || socio.estado === EstadoSocio.SUSPENDIDO) {
+          socio.estado = EstadoSocio.ACTIVO;
+        }
       }
 
       await this.sociosRepo.save(socio);
