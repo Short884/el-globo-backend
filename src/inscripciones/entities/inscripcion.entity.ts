@@ -26,6 +26,9 @@ export class Inscripcion {
   @ManyToOne(() => Actividad, (actividad) => actividad.inscripciones, { onDelete: 'CASCADE' })
   actividad: Actividad;
 
+  @Column({ type: 'tinyint', default: 0 })
+  asistencia: number; // 0 = ausente, 1 = presente
+
   @Column({ default: true })
   activa: boolean;
 

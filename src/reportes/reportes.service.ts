@@ -24,8 +24,8 @@ export class ReportesService {
     return this.sociosService.findAll(query);
   }
 
-  listadoAsistenciaPorActividad() {
-    return this.actividadesService.listadoAsistencia();
+  listadoAsistenciaPorActividad(instructorId?: number) {
+    return this.actividadesService.listadoAsistencia(instructorId);
   }
 
   listadoCasilleros(query: QueryCasilleroDto) {

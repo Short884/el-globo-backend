@@ -21,7 +21,7 @@ export class CobradoresController {
   }
 
   @Get()
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.COBRADOR, Role.INSTRUCTOR, Role.SOCIO)
   findAll() {
     return this.service.findAll();
   }

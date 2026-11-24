@@ -6,6 +6,8 @@ import { QueryCasilleroDto } from '../casilleros/dto/query-casillero.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Reportes')
 @ApiBearerAuth()
@@ -24,8 +26,9 @@ export class ReportesController {
   /** Listado ordenado por actividad y horario, para asistencia de instructores. */
   @Get('asistencia-actividades')
   @Roles(Role.ADMIN, Role.INSTRUCTOR)
-  asistencia() {
-    return this.service.listadoAsistenciaPorActividad();
+  asistencia(@CurrentUser() user: AuthenticatedUser) {
+    const instructorId = user.role === Role.INSTRUCTOR ? user.instructorId ?? undefined : undefined;
+    return this.service.listadoAsistenciaPorActividad(instructorId);
   }
 
   /** Listado de socios que ocupan casillero, alfabético o por número. */

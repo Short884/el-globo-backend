@@ -64,11 +64,16 @@ export class InscripcionesService {
   }
 
   findPorActividad(actividadId: number): Promise<Inscripcion[]> {
-    return this.repo.find({
-      where: { actividad: { id: actividadId }, activa: true },
-      relations: ['socio'],
-      order: { socio: { apellido: 'ASC' } },
-    });
+    return this.repo
+      .createQueryBuilder('inscripcion')
+      .innerJoinAndSelect('inscripcion.socio', 'socio')
+      .leftJoinAndSelect('inscripcion.actividad', 'actividad')
+      .where('(inscripcion.actividadId = :actividadId OR actividad.id = :actividadId)', { actividadId })
+      .andWhere('inscripcion.activa = 1')
+      .andWhere('socio.estado != :estadoBaja', { estadoBaja: EstadoSocio.BAJA })
+      .orderBy('socio.apellido', 'ASC')
+      .addOrderBy('socio.nombre', 'ASC')
+      .getMany();
   }
 
   findPorSocio(socioId: number): Promise<Inscripcion[]> {
@@ -76,5 +81,58 @@ export class InscripcionesService {
       where: { socio: { id: socioId } },
       relations: ['actividad'],
     });
+  }
+
+  /** Actualizar asistencia individual de una inscripción (0: ausente, 1: presente) */
+  async actualizarAsistencia(id: number, asistencia: number): Promise<Inscripcion> {
+    const inscripcion = await this.repo.findOne({ where: { id }, relations: ['socio', 'actividad'] });
+    if (!inscripcion) {
+      throw new NotFoundException(`No existe una inscripción con id ${id}.`);
+    }
+    inscripcion.asistencia = Number(asistencia) === 1 ? 1 : 0;
+    return this.repo.save(inscripcion);
+  }
+
+  /** Actualizar asistencias en lote para una actividad (0: ausente, 1: presente) */
+  async guardarAsistenciasActividad(
+    actividadId: number,
+    asistencias: { inscripcionId?: number; socioId?: number; asistencia: number }[],
+  ): Promise<{ message: string; actualizados: number }> {
+    let actualizados = 0;
+    for (const item of asistencias) {
+      let inscripcion: Inscripcion | null = null;
+      if (item.inscripcionId) {
+        inscripcion = await this.repo.findOne({ where: { id: item.inscripcionId } });
+      }
+      if (!inscripcion && item.socioId) {
+        inscripcion = await this.repo.findOne({
+          where: { actividad: { id: actividadId }, socio: { id: item.socioId } },
+        });
+      }
+      if (inscripcion) {
+        inscripcion.asistencia = Number(item.asistencia) === 1 ? 1 : 0;
+        await this.repo.save(inscripcion);
+        actualizados++;
+      }
+    }
+    return {
+      message: `Asistencias actualizadas correctamente (${actualizados} registros).`,
+      actualizados,
+    };
+  }
+
+  /** Baja por socio y actividad (CUD-07) */
+  async darDeBajaPorSocioYActividad(socioId: number, actividadId: number): Promise<{ message: string }> {
+    const inscripcion = await this.repo.findOne({
+      where: { socio: { id: socioId }, actividad: { id: actividadId } },
+      relations: ['socio', 'actividad'],
+    });
+    if (!inscripcion) {
+      throw new NotFoundException(`No existe una inscripción para el socio ${socioId} en la actividad ${actividadId}.`);
+    }
+    await this.repo.remove(inscripcion);
+    return {
+      message: `${inscripcion.socio.apellido}, ${inscripcion.socio.nombre} fue dado de baja de "${inscripcion.actividad.nombre}".`,
+    };
   }
 }

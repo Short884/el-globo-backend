@@ -7,6 +7,8 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Public } from '../common/decorators/public.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
 @ApiTags('Actividades deportivas')
 @Controller('actividades')
@@ -33,8 +35,9 @@ export class ActividadesController {
   @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN, Role.INSTRUCTOR)
-  asistencia() {
-    return this.service.listadoAsistencia();
+  asistencia(@CurrentUser() user: AuthenticatedUser) {
+    const instructorId = user.role === Role.INSTRUCTOR ? user.instructorId ?? undefined : undefined;
+    return this.service.listadoAsistencia(instructorId);
   }
 
   @Public()

@@ -42,8 +42,13 @@ export class SociosController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.COBRADOR, Role.INSTRUCTOR)
-  findAll(@Query() query: QuerySocioDto) {
+  @Roles(Role.ADMIN, Role.COBRADOR, Role.INSTRUCTOR, Role.SOCIO)
+  async findAll(@Query() query: QuerySocioDto, @CurrentUser() user: AuthenticatedUser) {
+    if (user.role === Role.SOCIO) {
+      if (!user.socioId) return [];
+      const propio = await this.sociosService.findOne(user.socioId);
+      return [propio];
+    }
     return this.sociosService.findAll(query);
   }
 

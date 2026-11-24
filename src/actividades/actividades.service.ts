@@ -70,10 +70,14 @@ export class ActividadesService {
    * Listado ordenado por actividad deportiva y horario con los socios que
    * la practican, usado como registro de asistencia por los instructores.
    */
-  async listadoAsistencia(): Promise<Actividad[]> {
+  async listadoAsistencia(instructorId?: number): Promise<Actividad[]> {
+    const whereClause: any = { activa: true };
+    if (instructorId) {
+      whereClause.instructor = { id: instructorId };
+    }
     return this.repo.find({
       relations: ['instructor', 'inscripciones', 'inscripciones.socio'],
-      where: { activa: true },
+      where: whereClause,
       order: { turno: 'ASC', horaInicio: 'ASC', nombre: 'ASC' },
     });
   }
