@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Inscripcion } from './entities/inscripcion.entity';
 import { Socio } from '../socios/entities/socio.entity';
 import { Actividad } from '../actividades/entities/actividad.entity';
+import { Instructor } from '../instructores/entities/instructor.entity';
 import { InscripcionesService } from './inscripciones.service';
 import { InscripcionesController } from './inscripciones.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Inscripcion, Socio, Actividad])],
+  imports: [TypeOrmModule.forFeature([Inscripcion, Socio, Actividad, Instructor])],
   controllers: [InscripcionesController],
   providers: [InscripcionesService],
   exports: [InscripcionesService],

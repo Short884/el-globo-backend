@@ -41,7 +41,10 @@ export class RendicionesService {
       for (const item of dto.detalles) {
         const cupon = await manager.findOne(Cupon, {
           where: { id: item.cuponId },
-          relations: ['cobrador', 'socio'],
+          relations: {
+            cobrador: true,
+            socio: true
+          }
         });
         if (!cupon) {
           throw new NotFoundException(`No existe un cupón con id ${item.cuponId}.`);
@@ -99,7 +102,14 @@ export class RendicionesService {
   findAll(cobradorId?: number): Promise<Rendicion[]> {
     return this.repo.find({
       where: cobradorId ? { cobrador: { id: cobradorId } } : {},
-      relations: ['cobrador', 'detalles', 'detalles.cupon', 'detalles.cupon.socio'],
+      relations: {
+        cobrador: true,
+        detalles: {
+          cupon: {
+            socio: true
+          }
+        }
+      },
       order: { fechaRendicion: 'DESC' },
     });
   }
@@ -107,7 +117,14 @@ export class RendicionesService {
   async findOne(id: number): Promise<Rendicion> {
     const rendicion = await this.repo.findOne({
       where: { id },
-      relations: ['cobrador', 'detalles', 'detalles.cupon', 'detalles.cupon.socio'],
+      relations: {
+        cobrador: true,
+        detalles: {
+          cupon: {
+            socio: true
+          }
+        }
+      },
     });
     if (!rendicion) {
       throw new NotFoundException(`No existe una rendición con id ${id}.`);

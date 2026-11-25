@@ -48,7 +48,7 @@ export class CasillerosService {
   }
 
   async findOne(id: number): Promise<Casillero> {
-    const casillero = await this.repo.findOne({ where: { id }, relations: ['socio'] });
+    const casillero = await this.repo.findOne({ where: { id }, relations: {socio: true}});
     if (!casillero) {
       throw new NotFoundException(`No existe un casillero con id ${id}.`);
     }

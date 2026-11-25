@@ -83,14 +83,16 @@ export class SociosService {
   async findOne(id: number): Promise<Socio> {
     const socio = await this.repo.findOne({
       where: { id },
-      relations: [
-        'casillero',
-        'grupoFamiliar',
-        'grupoFamiliar.integrantes',
-        'inscripciones',
-        'inscripciones.actividad',
-        'cupones',
-      ],
+      relations: {
+        casillero: true,
+        grupoFamiliar: {
+          integrantes: true
+        },
+        inscripciones: {
+          actividad: true
+        },
+        cupones: true
+      },
     });
     if (!socio) {
       throw new NotFoundException(`No existe un socio con id ${id}.`);

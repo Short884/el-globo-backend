@@ -41,4 +41,7 @@ export class Instructor {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column()
+  dni: string;
 }

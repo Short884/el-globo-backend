@@ -18,11 +18,15 @@ export class InstructoresService {
   }
 
   findAll(): Promise<Instructor[]> {
-    return this.repo.find({ relations: ['actividades'], order: { apellido: 'ASC' } });
+    return this.repo.find({ relations: {
+        actividades: true
+      }, order: { apellido: 'ASC' } });
   }
 
   async findOne(id: number): Promise<Instructor> {
-    const instructor = await this.repo.findOne({ where: { id }, relations: ['actividades'] });
+    const instructor = await this.repo.findOne({ where: { id }, relations: {
+        actividades: true
+      }});
     if (!instructor) {
       throw new NotFoundException(`No existe un instructor con id ${id}.`);
     }

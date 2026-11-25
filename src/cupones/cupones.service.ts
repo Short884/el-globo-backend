@@ -44,7 +44,11 @@ export class CuponesService {
   async findOne(id: number): Promise<Cupon> {
     const cupon = await this.repo.findOne({
       where: { id },
-      relations: ['socio', 'cobrador', 'grupoFamiliar'],
+      relations: {
+        socio: true,
+        cobrador:true,
+        grupoFamiliar:true
+      },
     });
     if (!cupon) {
       throw new NotFoundException(`No existe un cupón con id ${id}.`);
@@ -95,7 +99,13 @@ export class CuponesService {
     const config = await this.configuracionService.getOrCreate();
     const socios = await this.sociosRepo.find({
       where: { estado: EstadoSocio.ACTIVO },
-      relations: ['grupoFamiliar', 'inscripciones', 'inscripciones.actividad', 'casillero'],
+      relations: {
+        grupoFamiliar:true,
+        inscripciones: {
+          actividad: true
+        },
+        casillero: true
+      },
     });
 
     const yaEmitidos = await this.repo.find({ where: { periodo } });
@@ -174,7 +184,11 @@ export class CuponesService {
         { periodo: periodoAnterior, estado: EstadoCupon.PENDIENTE },
         { periodo: periodoAnterior, estado: EstadoCupon.DEVUELTO },
       ],
-      relations: ['socio', 'cobrador', 'grupoFamiliar'],
+      relations: {
+        socio: true,
+        cobrador: true,
+        grupoFamiliar: true
+      },
     });
 
     let reemitidos = 0;
@@ -224,7 +238,9 @@ export class CuponesService {
 
     const cuponesAnteriores = await this.repo.find({
       where: { periodo: periodoAnterior },
-      relations: ['socio'],
+      relations: {
+        socio: true
+      },
     });
 
     const cuponesPorSocio = new Map<number, Cupon[]>();
@@ -285,7 +301,11 @@ export class CuponesService {
   private async sumarActividadesDelGrupo(grupoId: number): Promise<number> {
     const integrantes = await this.sociosRepo.find({
       where: { grupoFamiliar: { id: grupoId } },
-      relations: ['inscripciones', 'inscripciones.actividad'],
+      relations: {
+        inscripciones: {
+          actividad: true
+        }
+      },
     });
     return integrantes.reduce(
       (acc, s) => acc + s.inscripciones.filter((i) => i.activa).reduce((a, i) => a + Number(i.actividad.arancel), 0),
@@ -296,7 +316,9 @@ export class CuponesService {
   private async sumarCasillerosDelGrupo(grupoId: number): Promise<number> {
     const integrantes = await this.sociosRepo.find({
       where: { grupoFamiliar: { id: grupoId } },
-      relations: ['casillero'],
+      relations: {
+        casillero: true
+      },
     });
     return integrantes.reduce((acc, s) => acc + (s.casillero ? Number(s.casillero.costoMensual) : 0), 0);
   }
@@ -305,7 +327,9 @@ export class CuponesService {
   async findPendientesPorCobrador(cobradorId: number): Promise<Cupon[]> {
     return this.repo.find({
       where: { cobrador: { id: cobradorId }, estado: EstadoCupon.PENDIENTE },
-      relations: ['socio'],
+      relations: {
+        socio: true
+      },
     });
   }
 

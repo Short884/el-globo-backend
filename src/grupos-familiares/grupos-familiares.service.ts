@@ -29,7 +29,9 @@ export class GruposFamiliaresService {
 
     const socios = await this.sociosRepo.find({
       where: ids.map((id) => ({ id })),
-      relations: ['grupoFamiliar'],
+      relations: {
+        grupoFamiliar: true
+      },
     });
     if (socios.length !== ids.length) {
       throw new NotFoundException('Alguno de los socios indicados no existe en el padrón.');
@@ -65,11 +67,13 @@ export class GruposFamiliaresService {
   }
 
   findAll(): Promise<GrupoFamiliar[]> {
-    return this.repo.find({ relations: ['integrantes'] });
+    return this.repo.find({ relations: {
+        integrantes: true
+      }});
   }
 
   async findOne(id: number): Promise<GrupoFamiliar> {
-    const grupo = await this.repo.findOne({ where: { id }, relations: ['integrantes'] });
+    const grupo = await this.repo.findOne({ where: { id }, relations: {integrantes: true}});
     if (!grupo) {
       throw new NotFoundException(`No existe un grupo familiar con id ${id}.`);
     }

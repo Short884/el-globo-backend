@@ -5,6 +5,7 @@ import { Actividad } from './entities/actividad.entity';
 import { CreateActividadDto } from './dto/create-actividad.dto';
 import { UpdateActividadDto } from './dto/update-actividad.dto';
 import { ConfiguracionService } from '../configuracion/configuracion.service';
+import { EstadoSocio } from '../common/enums/estado-socio.enum';
 
 @Injectable()
 export class ActividadesService {
@@ -31,23 +32,51 @@ export class ActividadesService {
   }
 
   /** Vitrina pública de actividades (Invitado / Usuario Externo, CUD-01). */
-  findAll(soloActivas = false): Promise<Actividad[]> {
-    return this.repo.find({
+  async findAll(soloActivas = false): Promise<Actividad[]> {
+    const actividades = await this.repo.find({
       where: soloActivas ? { activa: true } : {},
-      relations: ['instructor'],
+      relations: {
+        instructor: true,
+        inscripciones: {
+          socio: true,
+        },
+      },
       order: { turno: 'ASC', nombre: 'ASC' },
     });
+
+    return actividades.map((act) => {
+      const activas = (act.inscripciones || []).filter(
+        (i) => i.activa !== false && (!i.socio || i.socio.estado !== EstadoSocio.BAJA),
+      );
+      return {
+        ...act,
+        cupoOcupado: activas.length,
+        inscriptosCount: activas.length,
+      };
+    }) as any;
   }
 
   async findOne(id: number): Promise<Actividad> {
     const actividad = await this.repo.findOne({
       where: { id },
-      relations: ['instructor', 'inscripciones', 'inscripciones.socio'],
+      relations: {
+        instructor: true,
+        inscripciones: {
+          socio: true,
+        },
+      },
     });
     if (!actividad) {
       throw new NotFoundException(`No existe una actividad con id ${id}.`);
     }
-    return actividad;
+    const activas = (actividad.inscripciones || []).filter(
+      (i) => i.activa !== false && (!i.socio || i.socio.estado !== EstadoSocio.BAJA),
+    );
+    return {
+      ...actividad,
+      cupoOcupado: activas.length,
+      inscriptosCount: activas.length,
+    } as any;
   }
 
   async update(id: number, dto: UpdateActividadDto): Promise<Actividad> {
@@ -76,7 +105,12 @@ export class ActividadesService {
       whereClause.instructor = { id: instructorId };
     }
     return this.repo.find({
-      relations: ['instructor', 'inscripciones', 'inscripciones.socio'],
+      relations: {
+        instructor: true,
+        inscripciones: {
+          socio: true,
+        }
+      },
       where: whereClause,
       order: { turno: 'ASC', horaInicio: 'ASC', nombre: 'ASC' },
     });

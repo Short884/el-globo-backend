@@ -23,7 +23,11 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.usersRepo.findOne({
       where: { email: dto.email },
-      relations: ['socio', 'instructor', 'cobrador'],
+      relations: {
+        instructor: true,
+        socio: true,
+        cobrador: true
+      },
       select: {
         id: true,
         email: true,
@@ -79,7 +83,11 @@ export class AuthService {
   async me(userId: number): Promise<Omit<User, 'password'>> {
     const user = await this.usersRepo.findOne({
       where: { id: userId },
-      relations: ['socio', 'instructor', 'cobrador'],
+      relations: {
+        instructor: true,
+        socio: true,
+        cobrador: true
+      },
     });
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado.');

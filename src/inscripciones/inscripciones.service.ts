@@ -1,11 +1,13 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Inscripcion } from './entities/inscripcion.entity';
 import { CreateInscripcionDto } from './dto/create-inscripcion.dto';
 import { Socio } from '../socios/entities/socio.entity';
 import { Actividad } from '../actividades/entities/actividad.entity';
+import { Instructor } from '../instructores/entities/instructor.entity';
 import { EstadoSocio } from '../common/enums/estado-socio.enum';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
 
 @Injectable()
 export class InscripcionesService {
@@ -13,6 +15,7 @@ export class InscripcionesService {
     @InjectRepository(Inscripcion) private readonly repo: Repository<Inscripcion>,
     @InjectRepository(Socio) private readonly sociosRepo: Repository<Socio>,
     @InjectRepository(Actividad) private readonly actividadesRepo: Repository<Actividad>,
+    @InjectRepository(Instructor) private readonly instructoresRepo: Repository<Instructor>,
   ) {}
 
   /** Inscribirse en una actividad deportiva (CUD-06). Algunos socios están anotados en diversas actividades. */
@@ -25,7 +28,9 @@ export class InscripcionesService {
 
     const actividad = await this.actividadesRepo.findOne({
       where: { id: dto.actividadId },
-      relations: ['inscripciones'],
+      relations: {
+        inscripciones: true
+      }
     });
     if (!actividad) throw new NotFoundException(`No existe una actividad con id ${dto.actividadId}.`);
     if (!actividad.activa) throw new BadRequestException('La actividad no se encuentra disponible.');
@@ -52,7 +57,10 @@ export class InscripcionesService {
   async darDeBaja(id: number): Promise<{ message: string }> {
     const inscripcion = await this.repo.findOne({
       where: { id },
-      relations: ['socio', 'actividad'],
+      relations: {
+        socio: true,
+        actividad: true
+      }
     });
     if (!inscripcion) {
       throw new NotFoundException(`No existe una inscripción con id ${id}.`);
@@ -79,13 +87,28 @@ export class InscripcionesService {
   findPorSocio(socioId: number): Promise<Inscripcion[]> {
     return this.repo.find({
       where: { socio: { id: socioId } },
-      relations: ['actividad'],
+      relations: {
+        actividad: true
+      }
+    });
+  }
+
+  findAll(): Promise<Inscripcion[]> {
+    return this.repo.find({
+      relations: {
+        socio: true,
+        actividad: true,
+      },
+      where: { activa: true },
     });
   }
 
   /** Actualizar asistencia individual de una inscripción (0: ausente, 1: presente) */
   async actualizarAsistencia(id: number, asistencia: number): Promise<Inscripcion> {
-    const inscripcion = await this.repo.findOne({ where: { id }, relations: ['socio', 'actividad'] });
+    const inscripcion = await this.repo.findOne({ where: { id }, relations: {
+        socio: true,
+        actividad: true
+      }});
     if (!inscripcion) {
       throw new NotFoundException(`No existe una inscripción con id ${id}.`);
     }
@@ -125,7 +148,10 @@ export class InscripcionesService {
   async darDeBajaPorSocioYActividad(socioId: number, actividadId: number): Promise<{ message: string }> {
     const inscripcion = await this.repo.findOne({
       where: { socio: { id: socioId }, actividad: { id: actividadId } },
-      relations: ['socio', 'actividad'],
+      relations: {
+        socio: true,
+        actividad: true
+      }
     });
     if (!inscripcion) {
       throw new NotFoundException(`No existe una inscripción para el socio ${socioId} en la actividad ${actividadId}.`);
@@ -134,5 +160,48 @@ export class InscripcionesService {
     return {
       message: `${inscripcion.socio.apellido}, ${inscripcion.socio.nombre} fue dado de baja de "${inscripcion.actividad.nombre}".`,
     };
+  }
+
+  async findOne(id: number): Promise<Inscripcion | null> {
+    return this.repo.findOne({
+      where: { id },
+      relations: {
+        socio: true,
+        actividad: { instructor: true },
+      },
+    });
+  }
+
+  /**
+   * Valida que el usuario con rol INSTRUCTOR sea efectivamente quien dicta la actividad.
+   * Si no lo es, lanza ForbiddenException.
+   */
+  async validarInstructorActividad(user: AuthenticatedUser, actividadId: number): Promise<void> {
+    let instructorId = user.instructorId;
+    if (!instructorId) {
+      const inst = await this.instructoresRepo.findOne({
+        where: [{ user: { id: user.userId } }, { email: user.email }],
+      });
+      instructorId = inst?.id ?? null;
+    }
+
+    if (!instructorId) {
+      throw new ForbiddenException('No se encontró el registro de instructor asociado a este usuario.');
+    }
+
+    const actividad = await this.actividadesRepo.findOne({
+      where: { id: actividadId },
+      relations: { instructor: true },
+    });
+
+    if (!actividad) {
+      throw new NotFoundException(`No existe una actividad con id ${actividadId}.`);
+    }
+
+    if (!actividad.instructor || Number(actividad.instructor.id) !== Number(instructorId)) {
+      throw new ForbiddenException(
+        `Acceso denegado: sólo puede gestionar inscripciones en las actividades que tiene a su cargo ("${actividad.nombre}" está a cargo de otro instructor).`,
+      );
+    }
   }
 }

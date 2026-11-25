@@ -55,6 +55,8 @@ export class Actividad {
   @OneToMany(() => Inscripcion, (inscripcion) => inscripcion.actividad)
   inscripciones: Inscripcion[];
 
+  cupoOcupado?: number;
+
   @Column({ default: true })
   activa: boolean;
 

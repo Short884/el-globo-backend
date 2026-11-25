@@ -39,7 +39,11 @@ export class UsersService {
   }
 
   findAll(): Promise<User[]> {
-    return this.repo.find({ relations: ['socio', 'instructor', 'cobrador'] });
+    return this.repo.find({ relations: {
+      socio: true,
+      instructor: true,
+      cobrador: true
+    }});
   }
 
   async deactivate(id: number): Promise<User> {
