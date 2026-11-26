@@ -2,10 +2,19 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateInstructorDto {
-  @ApiProperty() @IsString() nombre: string;
-  @ApiProperty() @IsString() apellido: string;
-  @ApiProperty() @IsEmail() email: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsString() telefono?: string;
+  @ApiProperty() 
+  @IsString() nombre: string;
+  @ApiProperty() 
+  @IsString() apellido: string;
+  @ApiProperty() 
+  @IsEmail() email: string;
+  @ApiProperty() 
+  @IsEmail() dni: string;
+  @ApiProperty() 
+  @IsEmail() createdAt: number;
+  @ApiProperty({ required: false }) 
+  @IsOptional() 
+  @IsString() telefono?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
