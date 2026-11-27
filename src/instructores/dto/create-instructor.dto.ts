@@ -9,9 +9,9 @@ export class CreateInstructorDto {
   @ApiProperty() 
   @IsEmail() email: string;
   @ApiProperty() 
-  @IsEmail() dni: string;
+  @IsString() dni: string;
   @ApiProperty() 
-  @IsEmail() createdAt: number;
+  @IsString() createdAt: string;
   @ApiProperty({ required: false }) 
   @IsOptional() 
   @IsString() telefono?: string;

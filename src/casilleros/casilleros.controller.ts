@@ -32,15 +32,9 @@ export class CasillerosController {
     return this.service.findOne(id);
   }
 
-  @Patch(':id/alquilar/:socioId')
+@Patch(':id')
   @Roles(Role.ADMIN)
-  alquilar(@Param('id', ParseIntPipe) id: number, @Param('socioId', ParseIntPipe) socioId: number) {
-    return this.service.alquilar(id, socioId);
-  }
-
-  @Patch(':id/liberar')
-  @Roles(Role.ADMIN)
-  liberar(@Param('id', ParseIntPipe) id: number) {
-    return this.service.liberar(id);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: CreateCasilleroDto) {
+    return this.service.update(id, dto);
   }
 }

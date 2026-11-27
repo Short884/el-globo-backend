@@ -78,7 +78,7 @@ export class Socio {
   @Column({ type: 'enum', enum: RolGrupoFamiliar, nullable: true })
   rolGrupoFamiliar: RolGrupoFamiliar | null;
 
-  @OneToOne(() => Casillero, (casillero) => casillero.socio, { nullable: true })
+  @OneToOne(() => Casillero, (casillero) => casillero.socioId, { nullable: true })
   casillero: Casillero | null;
 
   @OneToMany(() => Inscripcion, (inscripcion) => inscripcion.socio)

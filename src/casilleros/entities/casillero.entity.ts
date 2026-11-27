@@ -15,7 +15,7 @@ export class Casillero {
 
   @OneToOne(() => Socio, (socio) => socio.casillero, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn()
-  socio: Socio | null;
+  socioId: Socio | null;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 2500 })
   costoMensual: number;

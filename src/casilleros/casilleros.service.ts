@@ -34,7 +34,7 @@ export class CasillerosService {
 
   /** Listado de socios que ocupan casillero (alfabético o por número, según el enunciado). */
   async findAll(query: QueryCasilleroDto): Promise<Casillero[]> {
-    const qb = this.repo.createQueryBuilder('casillero').leftJoinAndSelect('casillero.socio', 'socio');
+    const qb = this.repo.createQueryBuilder('casillero').leftJoinAndSelect('casillero.socioId', 'socio');
 
     if (query.orden === OrdenCasillero.ALFABETICO) {
       qb.orderBy('CASE WHEN socio.id IS NULL THEN 1 ELSE 0 END', 'ASC')
@@ -48,7 +48,7 @@ export class CasillerosService {
   }
 
   async findOne(id: number): Promise<Casillero> {
-    const casillero = await this.repo.findOne({ where: { id }, relations: {socio: true}});
+    const casillero = await this.repo.findOne({ where: { id }, relations: {socioId: true}});
     if (!casillero) {
       throw new NotFoundException(`No existe un casillero con id ${id}.`);
     }
@@ -58,11 +58,11 @@ export class CasillerosService {
   /** Alquilar un casillero disponible a un socio (relación 1:1). */
   async alquilar(casilleroId: number, socioId: number): Promise<Casillero> {
     const casillero = await this.findOne(casilleroId);
-    if (casillero.socio) {
+    if (casillero.socioId) {
       throw new ConflictException(`El casillero ${casillero.numero} ya está alquilado.`);
     }
 
-    const socioConCasillero = await this.repo.findOne({ where: { socio: { id: socioId } } });
+    const socioConCasillero = await this.repo.findOne({ where: { socioId: { id: socioId } } });
     if (socioConCasillero) {
       throw new ConflictException('El socio ya tiene un casillero alquilado.');
     }
@@ -72,7 +72,7 @@ export class CasillerosService {
       throw new NotFoundException(`No existe un socio con id ${socioId}.`);
     }
 
-    casillero.socio = socio;
+    casillero.socioId = socio;
     casillero.fechaAlquiler = new Date();
     return this.repo.save(casillero);
   }
@@ -80,8 +80,14 @@ export class CasillerosService {
   /** Libera el casillero (el socio deja de pagarlo en el próximo cupón). */
   async liberar(casilleroId: number): Promise<Casillero> {
     const casillero = await this.findOne(casilleroId);
-    casillero.socio = null;
+    casillero.socioId = null;
     casillero.fechaAlquiler = null;
+    return this.repo.save(casillero);
+  }
+
+  async update(id: number, dto: CreateCasilleroDto): Promise<Casillero> {
+    const casillero = await this.findOne(id);
+    Object.assign(casillero, dto);
     return this.repo.save(casillero);
   }
 }
